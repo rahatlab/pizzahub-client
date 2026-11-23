@@ -4,11 +4,9 @@ import { cn } from "@/lib/utils"
 export function Logo({
   className,
   href = "/",
-  showWordmark = true,
 }: {
   className?: string
   href?: string
-  showWordmark?: boolean
 }) {
   return (
     <Link
@@ -33,11 +31,9 @@ export function Logo({
           <circle cx="15" cy="11" r="0.9" fill="currentColor" stroke="none" />
         </svg>
       </span>
-      {showWordmark ? (
-        <span className="font-display text-lg leading-none tracking-[0.02em]">
-          PIZZA<span className="text-brand">HUB</span>
-        </span>
-      ) : null}
+      <span className="font-display text-lg leading-none tracking-[0.02em]">
+        PIZZA<span className="text-brand">HUB</span>
+      </span>
     </Link>
   )
 }
