@@ -121,7 +121,6 @@ Server (`pizzahub-server/.env`):
 cd pizzahub-server
 npm run db:indexes     # create Mongo indexes
 npm run seed:admin -- you@example.com   # promote an existing account (sign up first)
-npm run seed:demo      # optional: demo vendors and menu items
 ```
 
 ### 3. Start both apps
@@ -155,7 +154,7 @@ Use Stripe test card `4242 4242 4242 4242` with any future expiry date, then fin
 | server | `npm run dev` | API with `tsx watch` |
 | server | `npm run build` | Type-check (`tsc --noEmit`) |
 | server | `npm run db:indexes` | Create indexes |
-| server | `npm run seed:admin` / `seed:demo` | Seed admin / demo data |
+| server | `npm run seed:admin` | Promote an existing account to admin |
 
 ## Challenge implementation notes
 
