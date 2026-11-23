@@ -71,6 +71,8 @@ export function AdminUsers() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [revokeTarget, setRevokeTarget] = useState<AdminUser | null>(null)
+  const [revoking, setRevoking] = useState(false)
   const [detail, setDetail] = useState<AdminUserDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
 
@@ -119,6 +121,44 @@ export function AdminUsers() {
       )
     } finally {
       setBusyId(null)
+    }
+  }
+
+  const revokePremium = async () => {
+    if (!revokeTarget) return
+    setRevoking(true)
+    try {
+      const response = await apiFetch<{
+        deactivatedItems: number
+        rejectedItems: number
+      }>(`/users/${revokeTarget.id}/premium`, { method: "DELETE" })
+
+      const deactivated = response.data?.deactivatedItems ?? 0
+      const rejected = response.data?.rejectedItems ?? 0
+      const moved: string[] = []
+      if (deactivated > 0) {
+        moved.push(`${deactivated} item${deactivated === 1 ? "" : "s"} set inactive`)
+      }
+      if (rejected > 0) {
+        moved.push(
+          `${rejected} pending item${rejected === 1 ? "" : "s"} sent back for changes`
+        )
+      }
+
+      toast.success("Premium removed", {
+        description:
+          moved.length > 0
+            ? `${revokeTarget.name || "Vendor"} is back on the free plan; ${moved.join(" and ")}.`
+            : `${revokeTarget.name || "Vendor"} is back on the free plan.`,
+      })
+      setRevokeTarget(null)
+      await load()
+    } catch (revokeError) {
+      toast.error(
+        revokeError instanceof Error ? revokeError.message : "Action failed."
+      )
+    } finally {
+      setRevoking(false)
     }
   }
 
@@ -273,6 +313,17 @@ export function AdminUsers() {
                             {user.isBlocked ? "Unblock" : "Block"}
                           </Button>
                         ) : null}
+                        {user.role === "vendor" &&
+                        user.subscriptionPlan === "premium" ? (
+                          <Button
+                            variant="outline"
+                            size="xs"
+                            disabled={busyId === user.id}
+                            onClick={() => setRevokeTarget(user)}
+                          >
+                            Remove premium
+                          </Button>
+                        ) : null}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -379,6 +430,40 @@ export function AdminUsers() {
               </div>
             </div>
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(revokeTarget)}
+        onOpenChange={(open) => !open && !revoking && setRevokeTarget(null)}
+      >
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle>Remove Premium</DialogTitle>
+            <DialogDescription>
+              {revokeTarget?.name || "This vendor"} ({revokeTarget?.email})
+              will go back to the free plan. Payment records stay unchanged;
+              approved items beyond the free limit go inactive, and pending
+              ones are sent back to the vendor.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setRevokeTarget(null)}
+              disabled={revoking}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={revokePremium}
+              disabled={revoking}
+            >
+              {revoking ? "Removing…" : "Remove premium"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
