@@ -133,23 +133,19 @@ export function AdminUsers() {
         rejectedItems: number
       }>(`/users/${revokeTarget.id}/premium`, { method: "DELETE" })
 
-      const deactivated = response.data?.deactivatedItems ?? 0
-      const rejected = response.data?.rejectedItems ?? 0
-      const moved: string[] = []
-      if (deactivated > 0) {
-        moved.push(`${deactivated} item${deactivated === 1 ? "" : "s"} set inactive`)
-      }
-      if (rejected > 0) {
-        moved.push(
-          `${rejected} pending item${rejected === 1 ? "" : "s"} sent back for changes`
-        )
-      }
+      const { deactivatedItems = 0, rejectedItems = 0 } =
+        response.data ?? {}
+      const trimmed = [
+        deactivatedItems > 0 ? `${deactivatedItems} set inactive` : null,
+        rejectedItems > 0 ? `${rejectedItems} sent back for changes` : null,
+      ]
+        .filter(Boolean)
+        .join(" and ")
 
       toast.success("Premium removed", {
-        description:
-          moved.length > 0
-            ? `${revokeTarget.name || "Vendor"} is back on the free plan; ${moved.join(" and ")}.`
-            : `${revokeTarget.name || "Vendor"} is back on the free plan.`,
+        description: trimmed
+          ? `${revokeTarget.name || "Vendor"} is on the free plan; ${trimmed}.`
+          : `${revokeTarget.name || "Vendor"} is on the free plan.`,
       })
       setRevokeTarget(null)
       await load()
@@ -442,9 +438,8 @@ export function AdminUsers() {
             <DialogTitle>Remove Premium</DialogTitle>
             <DialogDescription>
               {revokeTarget?.name || "This vendor"} ({revokeTarget?.email})
-              will go back to the free plan. Payment records stay unchanged;
-              approved items beyond the free limit go inactive, and pending
-              ones are sent back to the vendor.
+              goes back to the free plan. Payment records stay unchanged;
+              items over the free limit are moved out of the counted set.
             </DialogDescription>
           </DialogHeader>
 
