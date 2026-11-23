@@ -35,7 +35,7 @@ Plan v1 was a good feature map, but not implementation-ready. Requirement covera
 | Backend deploy | Render/Railway | Express 5 on Vercel (zero-config) |
 | Menu status | `status` + `isActive` | `status` only: pending/approved/rejected/inactive |
 | Item details | Public | Private; logged-out → sign-in |
-| Premium | Basic plan | Featured, badge, cancel/resume, expiry, downgrade policy |
+| Premium | Basic plan | Featured, badge, one-time purchase, lifetime access |
 | Orders | Basic CRUD | Vendor/admin restrictions, duplicate guard, atomic states |
 | API standard | Generic examples | PizzaHub examples + Better Auth/Stripe exceptions |
 | QA/deploy | Thin | QA matrix, seed scripts, env tables, commit budget |
@@ -92,8 +92,8 @@ Plan v1 was a good feature map, but not implementation-ready. Requirement covera
 | 11 | Password rules absent | Min 6, max 128, at least one uppercase + one lowercase; enforced client + Better Auth hook. |
 | 12 | Blocked users mentioned but no mechanism | Express loads user on every JWT request and returns 403 `ACCOUNT_BLOCKED`; Next layout redirects to `/blocked`; admin block sets vendor items inactive. |
 | 13 | Navbar/footer vague | Exact public/logged-in nav, profile dropdown, immediate auth update, theme toggle, mobile sheet; footer contact/social/X logo/copyright. |
-| 14 | Admin/vendor gaps | Admin user detail, admin item delete + status change; vendor profile (businessName), vendor placed-orders page, subscription manage. |
-| 15 | Webhook raw body/idempotency absent | Mount raw webhook before `express.json`; verify signature; upsert by `stripeSessionId`; handle checkout/invoice/subscription events. |
+| 14 | Admin/vendor gaps | Admin user detail, admin item delete + status change; vendor profile (businessName), vendor placed-orders page, Premium purchase page. |
+| 15 | Webhook raw body/idempotency absent | Mount raw webhook before `express.json`; verify signature; upsert by `stripeSessionId`; handle checkout events. |
 | 16 | API standard examples generic | Rewrite PizzaHub examples; document Better Auth/Stripe exceptions; Zod details mapping; error code table. |
 | 17 | Loading/error/empty states not mapped | Per-page skeletons, `error.tsx`, `global-error.tsx`, custom 404, empty states, upload failure, 401/403/404 handling, toasts only. |
 | 18 | Backend on Render/Railway | **Vercel Functions + Express 5 zero-config**, serverless DB/body/timeout/cold-start rules (see §6). |
@@ -113,7 +113,7 @@ Plan v1 was a good feature map, but not implementation-ready. Requirement covera
 | Vendor dashboard (all 6 areas) | ⚠️ | Exact overview stats, item CRUD, availability, orders, subscription, profile |
 | Customer dashboard | ⚠️ | Total/pending/accepted/rejected + My Orders + cancel + timeline |
 | Admin dashboard | ⚠️ | Exact stats, users search/filter/block/detail, menu approve/reject/delete, read-only transactions |
-| Payment/Stripe/webhook | ⚠️ | Checkout, success/cancel, webhook raw, cancel/resume, expiry, featured/badge |
+| Payment/Stripe/webhook | ⚠️ | Checkout, success/cancel, webhook raw, lifetime premium, featured/badge |
 | Security/JWT/ownership/blocked | ⚠️ | JWKS verify, DB role, blocked check, explicit ownership, validation, rate limit |
 | Design/responsive/professional UI | ❌ | New dark/orange token system matched to references; no 3D/glass overload |
 | Loading/error/empty/toasts | ⚠️ | Full state matrix per page; sonner; no `alert()` |
@@ -148,7 +148,7 @@ Express 5 API (Vercel project 2 — pizzahub-api)
   ├─ menu/orders/upload/dashboard
   └─ Stripe checkout + raw webhook
         │
-        ├─ Stripe (subscription)
+        ├─ Stripe (payment)
         └─ ImgBB (menu/profile images)
 ```
 
@@ -179,12 +179,11 @@ Express 5 API (Vercel project 2 — pizzahub-api)
 ### 5.5 Payment flow
 
 1. Vendor clicks Upgrade → `POST /api/payment/create-checkout-session` with JWT.
-2. Server uses vendor id from JWT, creates/reuses a Stripe customer, creates a subscription Checkout (inline $9.99/month price), returns URL.
+2. Server uses vendor id from JWT, creates/reuses a Stripe customer, creates a one-time Checkout (inline $99.99 price), returns URL.
 3. Stripe redirects to `/payment/success` or `/payment/cancel`.
 4. Success page **never activates**; it polls `GET /api/payment/subscription`.
-5. Stripe webhook verifies raw signature, saves the transaction, updates premium + expiry + cancel flag.
-6. Cancel/resume endpoints set `cancel_at_period_end`; webhook confirms.
-7. Expiry sync on authenticated requests downgrades to free and deactivates extra items.
+5. Stripe webhook verifies raw signature, saves the transaction, activates lifetime premium (no expiry).
+6. Premium is lifetime: no renewal and no cancel/resume endpoints; expiry sync only clears stale premium state and deactivates extra items.
 
 ### 5.6 Order flow
 
@@ -366,7 +365,7 @@ Rules:
 
 ### 8.1 `users` (Better Auth-managed, `modelName: 'users'`)
 
-`_id` ObjectId, `name`, `email` unique, `emailVerified`, `image`, `role` (`customer|vendor|admin`), `isBlocked`, `businessName`, `subscriptionPlan` (`free|premium`), `subscriptionExpiresAt`, `subscriptionCancelAtPeriodEnd`, `stripeCustomerId`, `ratingAvg`, `ratingCount` (optional reviews), `createdAt`, `updatedAt`.
+`_id` ObjectId, `name`, `email` unique, `emailVerified`, `image`, `role` (`customer|vendor|admin`), `isBlocked`, `businessName`, `subscriptionPlan` (`free|premium`; premium is lifetime), `subscriptionExpiresAt` (always null), `subscriptionCancelAtPeriodEnd` (unused), `stripeCustomerId`, `ratingAvg`, `ratingCount` (optional reviews), `createdAt`, `updatedAt`.
 
 - Better Auth `additionalFields`: role input true but enum excludes admin; isBlocked/plan/expiry/customerId/cancel flag input false; businessName input true.
 - `databaseHooks.user.update.before`: reject any role change from profile updates.
@@ -391,7 +390,7 @@ Rules:
 
 ### 8.4 `transactions`
 
-`_id`, `vendorId`, `plan: premium`, `amount` (cents), `currency: usd`, `stripeSessionId` unique, `stripeSubscriptionId`, `status` (`pending|success|failed`), `createdAt`, `updatedAt`.
+`_id`, `vendorId`, `plan: premium`, `amount` (cents), `currency: usd`, `stripeSessionId` unique, `stripeSubscriptionId` (unused — one-time payment), `status` (`pending|success|failed`), `createdAt`, `updatedAt`.
 
 - Indexes: `{vendorId}`, `{stripeSessionId}` unique, `{status}`, `{createdAt}`.
 
@@ -405,7 +404,7 @@ Rules:
 
 **Order:** `pending → accepted | rejected | cancelled`; accepted/rejected/cancelled terminal; only pending transitions; atomic filter `{_id, status: pending, vendorId/customerId}`.
 
-**Subscription:** `free → premium` only via verified webhook; `premium → free` via cancel-at-period-end expiry or webhook; expiry sync also downgrades.
+**Premium:** `free → premium` only via the verified checkout webhook; premium is lifetime (no auto-downgrade); expiry sync only clears stale premium state and deactivates extra items.
 
 ---
 
@@ -453,10 +452,8 @@ Rules:
 | PATCH | `/api/orders/:id/cancel` | Customer/Vendor own | Pending only |
 | GET | `/api/orders/:id` | Owner/Admin | Detail |
 | POST | `/api/upload/imgbb` | Private | multipart, max 3MB, jpg/png/webp |
-| POST | `/api/payment/create-checkout-session` | Vendor | Subscription checkout |
-| GET | `/api/payment/subscription` | Vendor | Plan/expiry/cancel flag |
-| POST | `/api/payment/cancel-subscription` | Vendor | cancel_at_period_end |
-| POST | `/api/payment/resume-subscription` | Vendor | Resume |
+| POST | `/api/payment/create-checkout-session` | Vendor | One-time $99.99 checkout |
+| GET | `/api/payment/subscription` | Vendor | Plan/premium state + price |
 | GET | `/api/payment/transactions` | Admin | Read-only, paginated |
 | POST | `/api/payment/webhook` | Stripe | Raw body, signature |
 | GET | `/api/dashboard/vendor` | Vendor | Stats + charts |
@@ -550,7 +547,7 @@ export async function connectDb() {
 | `/dashboard/vendor/add-item` | Vendor | Form, ImgBB upload, pending notice, free limit banner |
 | `/dashboard/vendor/orders` | Vendor | Customer info, item, date/address/message, accept/reject once |
 | `/dashboard/vendor/my-orders` | Vendor | Orders vendor placed as customer |
-| `/dashboard/vendor/subscription` | Vendor | Plan, expiry, upgrade/cancel/resume, benefits |
+| `/dashboard/vendor/subscription` | Vendor | Plan, lifetime upgrade, benefits |
 | `/dashboard/customer/overview` | Customer | Total/pending/accepted/rejected/cancelled |
 | `/dashboard/customer/my-orders` | Customer | Orders, detail, cancel pending, timeline |
 | `/dashboard/admin/overview` | Admin | Exact stats + charts |
@@ -577,14 +574,14 @@ Footer: logo/description, links, contact, social (X logo), copyright.
 ## 11. Business Rules
 
 - **Free plan:** max 3 non-rejected/non-inactive items (pending + approved); block create/reactivate/admin approve with `PLAN_LIMIT`. **Premium:** unlimited.
-- **Premium:** featured placement first on home; Premium badge; subscription management; cancel at period end; expiry sync.
+- **Premium:** featured placement first on home; Premium badge; one-time lifetime upgrade purchase.
 - **Downgrade:** keep 3 oldest approved active; set extra approved to inactive; pending items cannot be approved until under limit.
 - **Order:** vendor cannot order own item; admin cannot order; vendor can order others; customer logged in; only approved item; duplicate active order blocked; delivery date today/future normalized UTC.
 - **Order transitions:** only pending accepts/rejects/cancels; atomic update; terminal states immutable; ownership enforced.
 - **Menu visibility:** public only `approved`; rejected/inactive/pending hidden; admin can delete; vendor edits rejected → pending.
 - **Profile:** name/image/businessName editable; role/subscription/isBlocked never editable by user.
 - **Admin:** block/unblock, approve/reject/delete items, read-only transactions; cannot edit payment status; cannot block self/admin.
-- **Orders are not paid:** no Stripe on customer ordering; only show place-order; Stripe only for vendor subscription.
+- **Orders are not paid:** no Stripe on customer ordering; only show place-order; Stripe only for the vendor Premium purchase.
 - **Admin creation:** seed only; no public admin signup.
 
 ---
@@ -639,7 +636,7 @@ Optional (at least 2):
 | 0.5 | Static design reference (home + vendor dashboard mock) | Moved to `docs/design-reference/` |
 | 1 | Client foundation/auth: tokens, fonts, shadcn, Better Auth, JWT, proxy, guards | Build/lint/typecheck pass; auth pages + role placeholders; JWT-to-Express pending Phase 2 |
 | 2 | Server core: models, middleware, menu, orders, upload, seed | Postman passes; public/private access correct |
-| 3 | Stripe: checkout, webhook, cancel/resume, expiry, premium | Premium only after webhook; downgrade works |
+| 3 | Stripe: checkout, webhook, lifetime premium | Premium only after webhook; replay idempotent |
 | 4 | Public UI: home, menu, details, auth, order dialog | Responsive; loading/empty; redirects |
 | 5 | Dashboards: vendor, customer, admin, charts, profile | All role pages; wrong URL blocked |
 | 6 | Optionals + QA: theme, timeline, reviews stretch, QA matrix | 20/12 commits; all checks pass |
@@ -668,7 +665,7 @@ Commit budget: **24 client / 14 server** minimum, descriptive messages, split pe
 17. `feat: build vendor menu items table and actions`
 18. `feat: build add menu item form and image upload`
 19. `feat: build vendor orders accept/reject flow`
-20. `feat: build vendor subscription management`
+20. `feat: build vendor Premium purchase page`
 21. `feat: build customer overview and my orders`
 22. `feat: build admin overview and user management`
 23. `feat: build admin menu moderation and transactions`
@@ -689,7 +686,7 @@ Commit budget: **24 client / 14 server** minimum, descriptive messages, split pe
 9. `feat: add atomic order accept, reject, and cancel`
 10. `feat: add ImgBB upload endpoint with validation`
 11. `feat: add Stripe checkout and raw webhook`
-12. `feat: add subscription cancel, resume, and expiry sync`
+12. `feat: add one-time checkout, webhook activation, and expiry sync`
 13. `feat: add dashboard aggregates and admin user endpoints`
 14. `feat: add admin menu moderation and read-only transactions`
 15. `chore: add seed scripts, health check, and API documentation`
@@ -802,11 +799,11 @@ Commit budget: **24 client / 14 server** minimum, descriptive messages, split pe
 - Backend target is **Vercel** (Express 5), separate project from the client; no Render/Railway.
 - Both apps use MongoDB Atlas; separate Vercel projects.
 - Dark-first design matches references; light theme is full cream.
-- Currency USD; premium $9.99/month.
+- Currency USD; premium $99.99 one-time (lifetime).
 - Vendors can order other vendors' items; admins cannot order; vendor gets My Orders.
 - Google signups default to Customer; email signup has role selection.
 - Reviews are stretch; theme + timeline are the two chosen optionals.
-- No Stripe on customer orders; only vendor subscription.
+- No Stripe on customer orders; only the vendor Premium purchase.
 - Admin role change (optional in assignment) skipped.
 - npm; Node 22 on Vercel; separate repos.
 
@@ -818,7 +815,7 @@ Commit budget: **24 client / 14 server** minimum, descriptive messages, split pe
 
 1. **Phase 2:** Initialize `pizzahub-server` (Express 5 on Vercel, env/db/utils, models, JWT/role/ownership middleware, health + `/users/me`).
 2. **Phase 2B:** Menu, orders, upload, seed.
-3. **Phase 3:** Stripe — checkout, webhook, cancel/resume, expiry, premium.
+3. **Phase 3:** Stripe — checkout, webhook, lifetime premium.
 4. **Phase 4:** Public UI.
 5. **Phase 5:** Dashboards.
 6. **Phase 6:** Optionals + QA.
