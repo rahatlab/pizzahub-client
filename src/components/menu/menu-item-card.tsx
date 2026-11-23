@@ -3,6 +3,7 @@ import Link from "next/link"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Pizza01Icon } from "@hugeicons/core-free-icons"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { PremiumBadge } from "@/components/menu/premium-badge"
 import type { MenuItem } from "@/types"
@@ -58,7 +59,14 @@ export function MenuItemCard({
           </span>
         </div>
 
-        <h3 className="line-clamp-1 font-semibold">{item.itemName}</h3>
+        <h3 className="line-clamp-1 font-semibold">
+          <Link
+            href={`/menu/${item.id}`}
+            className="transition-colors hover:text-brand"
+          >
+            {item.itemName}
+          </Link>
+        </h3>
         <p className="truncate text-xs text-muted-foreground">{vendorName}</p>
         <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
           {item.description}
@@ -68,12 +76,14 @@ export function MenuItemCard({
           <span className="text-lg font-semibold tabular-nums text-brand">
             ${item.price.toFixed(2)}
           </span>
-          <Link
-            href={`/menu/${item.id}`}
-            className="shrink-0 text-xs font-medium text-muted-foreground transition-colors hover:text-brand"
+          <Button
+            variant="outline"
+            size="xs"
+            className="shrink-0"
+            render={<Link href={`/menu/${item.id}`} />}
           >
             View details
-          </Link>
+          </Button>
         </div>
       </div>
     </Card>
