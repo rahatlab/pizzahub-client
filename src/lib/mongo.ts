@@ -13,7 +13,11 @@ export const mongoClient =
   globalForMongo.__pizzahubMongoClient ??
   new MongoClient(uri, {
     maxPoolSize: 5,
-    serverSelectionTimeoutMS: 5000,
+    // Serverless cold starts over Atlas SRV take longer than a few seconds on
+    // the first connection; a short selection timeout made every auth request
+    // fail with MongoTopologyClosedError.
+    serverSelectionTimeoutMS: 30000,
+    connectTimeoutMS: 30000,
   })
 
 if (process.env.NODE_ENV !== "production") {
