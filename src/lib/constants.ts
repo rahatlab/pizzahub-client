@@ -44,7 +44,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 }
 
 export const FREE_PLAN_ITEM_LIMIT = 3
-export const PREMIUM_PLAN_PRICE_CENTS = 999
+export const PREMIUM_PLAN_PRICE_CENTS = 9999
 export const PREMIUM_PLAN_CURRENCY = "usd"
 
 export const DASHBOARD_PATH: Record<Role, string> = {

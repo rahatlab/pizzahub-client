@@ -90,6 +90,12 @@ export interface Order {
   message?: string | null
   status: OrderStatus
   rejectionReason?: string | null
+  customer?: {
+    id: string
+    name: string
+    email: string
+    image?: string | null
+  }
   createdAt: string
   updatedAt: string
 }

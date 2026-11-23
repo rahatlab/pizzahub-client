@@ -4,6 +4,7 @@ import "./globals.css"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/providers/theme-provider"
 import { QueryProvider } from "@/providers/query-provider"
+import { SessionProviderWrapper } from "@/providers/session-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 
@@ -42,8 +43,10 @@ export default function RootLayout({
         <ThemeProvider>
           <QueryProvider>
             <TooltipProvider>
-              {children}
-              <Toaster richColors position="top-right" />
+              <SessionProviderWrapper>
+                {children}
+                <Toaster richColors position="top-right" />
+              </SessionProviderWrapper>
             </TooltipProvider>
           </QueryProvider>
         </ThemeProvider>
