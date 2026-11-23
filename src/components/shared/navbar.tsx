@@ -4,7 +4,6 @@ import { useState } from "react"
 import type { ComponentProps } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useTheme } from "next-themes"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   LayoutDashboardIcon,
@@ -31,6 +30,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { useTheme } from "@/providers/theme-provider"
 import { authClient } from "@/lib/auth-client"
 import { DASHBOARD_PATH } from "@/lib/constants"
 import { cn } from "@/lib/utils"

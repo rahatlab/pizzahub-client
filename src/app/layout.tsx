@@ -40,6 +40,14 @@ export default function RootLayout({
       className={cn(archivo.variable, figtree.variable, "font-sans")}
     >
       <body>
+        {/* Applies the stored theme before first paint so light-mode visitors
+            never see a dark flash. Kept out of the client providers because
+            React 19 does not hydrate inline scripts rendered by components. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var e=document.documentElement.classList;try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t="dark"}e.remove("light","dark");e.add(t)}catch(x){e.add("dark")}})()`,
+          }}
+        />
         <ThemeProvider>
           <QueryProvider>
             <TooltipProvider>
