@@ -1,65 +1,154 @@
 import type { Metadata } from "next"
-import { requireRole } from "@/lib/session"
+import Link from "next/link"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+  CheckmarkCircle02Icon,
+  Invoice01Icon,
+  Pizza01Icon,
+  Store01Icon,
+  TruckDeliveryIcon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons"
+import { requireRole } from "@/lib/session"
+import { serverApiFetch } from "@/lib/server-api"
+import { buttonVariants } from "@/components/ui/button"
+import {
+  DashboardEmptyState,
+  DashboardPageHeader,
+} from "@/components/dashboard/dashboard-shell"
+import { StatCard } from "@/components/dashboard/stat-card"
+import {
+  CategoryLegend,
+  ItemsCategoryChart,
+  OrdersStatusChart,
+} from "@/components/dashboard/overview-charts"
+import type { AdminDashboard } from "@/types/dashboard"
 
-export const metadata: Metadata = {
-  title: "Admin Overview",
-}
+export const metadata: Metadata = { title: "Admin Overview" }
 
 export default async function AdminOverviewPage() {
-  const user = await requireRole("admin")
+  await requireRole("admin")
+
+  let data: AdminDashboard | null = null
+  try {
+    const response = await serverApiFetch<AdminDashboard>("/dashboard/admin")
+    data = response.data ?? null
+  } catch {
+    data = null
+  }
+
+  if (!data) {
+    return (
+      <div>
+        <DashboardPageHeader title="Platform control" />
+        <DashboardEmptyState
+          icon={Store01Icon}
+          title="Dashboard data unavailable"
+          description="The API did not respond. Refresh once the server is reachable."
+          action={
+            <Link
+              href="/dashboard/admin/users"
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              Open users
+            </Link>
+          }
+        />
+      </div>
+    )
+  }
+
+  const { stats } = data
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand">
-          Admin workspace
-        </p>
-        <h1 className="mt-2 font-display text-3xl uppercase tracking-tight sm:text-4xl">
-          Platform control
-        </h1>
-        <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
-          Signed in as {user.name}. User management, menu moderation, and
-          read-only transaction reporting are the next admin phases.
-        </p>
+      <DashboardPageHeader
+        title="Platform control"
+        description="Approvals, accounts, and Premium revenue at a glance."
+        action={
+          <Link
+            href="/dashboard/admin/menu-items"
+            className={buttonVariants({ size: "sm" })}
+          >
+            Review menu
+          </Link>
+        }
+      />
+
+      {stats.pendingItems > 0 && (
+        <div className="rounded-xl border border-brand/30 bg-brand/5 px-4 py-3 text-sm">
+          {stats.pendingItems} menu item{stats.pendingItems === 1 ? "" : "s"}{" "}
+          waiting for moderation.
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Users"
+          value={stats.totalUsers}
+          hint={`${stats.customers} customers · ${stats.vendors} vendors`}
+          icon={UserGroupIcon}
+        />
+        <StatCard
+          label="Menu items"
+          value={stats.totalItems}
+          hint={`${stats.approvedItems} approved · ${stats.pendingItems} pending`}
+          icon={Pizza01Icon}
+        />
+        <StatCard
+          label="Orders"
+          value={stats.totalOrders}
+          hint={`${stats.pendingOrders} pending`}
+          icon={TruckDeliveryIcon}
+          accent={stats.pendingOrders > 0}
+        />
+        <StatCard
+          label="Premium vendors"
+          value={stats.premiumVendors}
+          hint={`${stats.successfulTransactions}/${stats.transactions} payments succeeded`}
+          icon={Invoice01Icon}
+        />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Users</CardTitle>
-            <CardDescription>Search, filter, block, unblock.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Coming in the admin users phase.
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Menu moderation</CardTitle>
-            <CardDescription>
-              Approve, reject, or remove published items.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Coming in the admin menu phase.
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Transactions</CardTitle>
-            <CardDescription>Read-only Premium payment records.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Coming in the admin transactions phase.
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="rounded-xl border border-border bg-card p-5">
+          <h2 className="text-sm font-semibold">Orders by status</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Platform-wide, all vendors.
+          </p>
+          <OrdersStatusChart data={data.ordersByStatus} />
+        </section>
+
+        <section className="rounded-xl border border-border bg-card p-5">
+          <h2 className="text-sm font-semibold">Items by category</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Every published and pending item.
+          </p>
+          <div className="grid items-center gap-4 sm:grid-cols-[1fr_170px]">
+            <ItemsCategoryChart data={data.itemsByCategory} />
+            <CategoryLegend data={data.itemsByCategory} />
+          </div>
+        </section>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard
+          label="Blocked accounts"
+          value={stats.blockedUsers}
+          hint="Cannot access the platform"
+          icon={CheckmarkCircle02Icon}
+        />
+        <StatCard
+          label="Admins"
+          value={stats.admins}
+          hint="Full moderation access"
+          icon={UserGroupIcon}
+        />
+        <StatCard
+          label="Transactions"
+          value={stats.transactions}
+          hint="Read-only ledger"
+          icon={Invoice01Icon}
+        />
       </div>
     </div>
   )
