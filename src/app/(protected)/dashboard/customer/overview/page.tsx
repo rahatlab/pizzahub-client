@@ -3,7 +3,6 @@ import Link from "next/link"
 import {
   CheckmarkCircle02Icon,
   ClockIcon,
-  Pizza01Icon,
   ShoppingBag01Icon,
   CancelCircleIcon,
 } from "@hugeicons/core-free-icons"
@@ -45,7 +44,6 @@ export default async function CustomerOverviewPage() {
           description="Your order history at a glance."
         />
         <DashboardEmptyState
-          icon={Pizza01Icon}
           title="Dashboard data unavailable"
           description="The API did not respond. Refresh once the server is reachable."
           action={browseAction}

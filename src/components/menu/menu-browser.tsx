@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { MenuItemCard } from "@/components/menu/menu-item-card"
+import { EmptyState } from "@/components/shared/empty-state"
+import { Reveal } from "@/components/shared/reveal"
 import { CATEGORIES } from "@/lib/constants"
 import { PUBLIC_API_URL } from "@/lib/api-url"
 import type { ApiResponse, MenuItem, Pagination } from "@/types"
@@ -281,9 +283,14 @@ export function MenuBrowser() {
               {pagination.total} item{pagination.total === 1 ? "" : "s"} found
             </p>
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {items.map((item) => (
-                <MenuItemCard key={item.id} item={item} />
+            <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {items.map((item, index) => (
+                <Reveal
+                  key={item.id}
+                  delay={Math.min(index * 0.04, 0.24)}
+                >
+                  <MenuItemCard item={item} />
+                </Reveal>
               ))}
             </div>
 
@@ -312,26 +319,21 @@ export function MenuBrowser() {
             )}
           </>
         ) : (
-          <Card className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-            <p className="text-base font-medium">
-              {hasFilters ? "No items match" : "No approved items yet"}
-            </p>
-            <p className="max-w-md text-sm text-muted-foreground">
-              {hasFilters
+          <EmptyState
+            title={hasFilters ? "No items match" : "No approved items yet"}
+            description={
+              hasFilters
                 ? "Try a different search term, category, or location."
-                : "New menu items appear here after admin approval."}
-            </p>
-            {hasFilters && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={resetFilters}
-              >
-                Reset filters
-              </Button>
-            )}
-          </Card>
+                : "New menu items appear here after admin approval."
+            }
+            action={
+              hasFilters ? (
+                <Button variant="outline" size="sm" onClick={resetFilters}>
+                  Reset filters
+                </Button>
+              ) : undefined
+            }
+          />
         )}
       </div>
     </div>

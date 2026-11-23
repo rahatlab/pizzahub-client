@@ -20,9 +20,9 @@ import {
   Store01Icon,
   TruckDeliveryIcon,
   UserGroupIcon,
-  UserIcon,
 } from "@hugeicons/core-free-icons"
 import { Logo } from "@/components/shared/logo"
+import { EmptyState } from "@/components/shared/empty-state"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -308,21 +308,10 @@ export function DashboardEmptyState({
   title,
   description,
   action,
-  icon = UserIcon,
 }: {
   title: string
   description: string
   action?: React.ReactNode
-  icon?: ComponentProps<typeof HugeiconsIcon>["icon"]
 }) {
-  return (
-    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border px-6 py-14 text-center">
-      <span className="grid size-10 place-items-center rounded-lg bg-muted text-muted-foreground">
-        <HugeiconsIcon icon={icon} className="size-5" />
-      </span>
-      <p className="text-sm font-medium">{title}</p>
-      <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
-      {action}
-    </div>
-  )
+  return <EmptyState title={title} description={description} action={action} />
 }

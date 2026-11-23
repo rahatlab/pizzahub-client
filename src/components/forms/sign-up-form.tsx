@@ -16,7 +16,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 
 type Role = "customer" | "vendor"
@@ -77,7 +76,9 @@ export function SignUpForm({ redirectTo }: { redirectTo?: string }) {
   return (
     <Card className="w-full max-w-lg border-border bg-card/95 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
       <CardHeader className="gap-1.5">
-        <CardTitle className="text-2xl">Create your account</CardTitle>
+        <h1 className="font-display text-2xl leading-none tracking-tight">
+          Create your account
+        </h1>
         <CardDescription>
           Order from local kitchens or open your own PizzaHub storefront.
         </CardDescription>

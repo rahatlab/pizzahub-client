@@ -69,7 +69,7 @@ export function MenuItemDetail({
 
       <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-3">
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-border bg-surface">
+          <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-border bg-surface">
             {images[activeImage] ? (
               <Image
                 src={images[activeImage]}

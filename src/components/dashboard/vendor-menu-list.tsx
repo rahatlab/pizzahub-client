@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/table"
 import { MenuStatusBadge } from "@/components/dashboard/status-badge"
 import { MenuItemForm } from "@/components/dashboard/menu-item-form"
+import { EmptyState } from "@/components/shared/empty-state"
 import { apiFetch } from "@/lib/api"
 import { FREE_PLAN_ITEM_LIMIT } from "@/lib/constants"
 import { formatCurrency } from "@/lib/format"
@@ -141,15 +142,10 @@ export function VendorMenuList({
           {error}
         </div>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border px-6 py-14 text-center">
-          <span className="grid size-10 place-items-center rounded-lg bg-muted text-muted-foreground">
-            <HugeiconsIcon icon={Pizza01Icon} className="size-5" />
-          </span>
-          <p className="text-sm font-medium">No menu items yet</p>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            Add your first pizza. It goes live after admin approval.
-          </p>
-        </div>
+        <EmptyState
+          title="No menu items yet"
+          description="Add your first pizza. It goes live after admin approval."
+        />
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           <Table>

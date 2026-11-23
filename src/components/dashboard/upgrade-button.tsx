@@ -8,7 +8,13 @@ import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { apiFetch } from "@/lib/api"
 
-export function UpgradeButton({ className }: { className?: string }) {
+export function UpgradeButton({
+  className,
+  label = "Upgrade to Premium",
+}: {
+  className?: string
+  label?: string
+}) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
@@ -36,7 +42,7 @@ export function UpgradeButton({ className }: { className?: string }) {
 
   return (
     <Button size="lg" onClick={upgrade} disabled={loading} className={className}>
-      {loading ? "Opening checkout…" : "Upgrade to Premium"}
+      {loading ? "Opening checkout…" : label}
       <HugeiconsIcon icon={ArrowUpRight01Icon} className="size-4" />
     </Button>
   )

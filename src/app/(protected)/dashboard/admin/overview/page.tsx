@@ -4,7 +4,6 @@ import {
   CheckmarkCircle02Icon,
   Invoice01Icon,
   Pizza01Icon,
-  Store01Icon,
   TruckDeliveryIcon,
   UserGroupIcon,
 } from "@hugeicons/core-free-icons"
@@ -41,7 +40,6 @@ export default async function AdminOverviewPage() {
       <div>
         <DashboardPageHeader title="Platform control" />
         <DashboardEmptyState
-          icon={Store01Icon}
           title="Dashboard data unavailable"
           description="The API did not respond. Refresh once the server is reachable."
           action={

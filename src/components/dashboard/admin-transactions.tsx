@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Invoice01Icon, RefreshIcon } from "@hugeicons/core-free-icons"
+import { RefreshIcon } from "@hugeicons/core-free-icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { apiFetch } from "@/lib/api"
+import { EmptyState } from "@/components/shared/empty-state"
 import { formatCurrency, formatDateTime } from "@/lib/format"
 import type { Pagination, TransactionStatus } from "@/types"
 
@@ -143,16 +144,10 @@ export function AdminTransactions() {
           {error}
         </div>
       ) : transactions.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border px-6 py-14 text-center">
-          <HugeiconsIcon
-            icon={Invoice01Icon}
-            className="size-6 text-muted-foreground"
-          />
-          <p className="text-sm font-medium">No transactions yet</p>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            Premium checkout attempts appear here once a vendor starts one.
-          </p>
-        </div>
+        <EmptyState
+          title="No transactions yet"
+          description="Premium checkout attempts appear here once a vendor starts one."
+        />
       ) : (
         <>
           <div className="overflow-hidden rounded-xl border border-border bg-card">

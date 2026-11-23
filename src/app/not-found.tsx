@@ -1,8 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Pizza01Icon } from "@hugeicons/core-free-icons"
 import { Logo } from "@/components/shared/logo"
+import { PizzaIllustration } from "@/components/shared/pizza-illustration"
 import { Button } from "@/components/ui/button"
 
 export const metadata: Metadata = {
@@ -16,9 +15,7 @@ export default function NotFound() {
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-8 text-center">
         <Logo className="justify-center" />
 
-        <span className="mx-auto mt-8 grid size-12 place-items-center rounded-xl bg-brand/10 text-brand">
-          <HugeiconsIcon icon={Pizza01Icon} className="size-6" />
-        </span>
+        <PizzaIllustration className="mx-auto mt-8 size-32" />
 
         <p className="mt-5 font-display text-5xl leading-none tracking-tight text-brand">
           404

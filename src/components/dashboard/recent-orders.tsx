@@ -7,6 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { OrderStatusBadge } from "@/components/dashboard/status-badge"
+import { EmptyState } from "@/components/shared/empty-state"
 import { formatCurrency, formatDate } from "@/lib/format"
 import type { Order } from "@/types"
 
@@ -19,9 +20,13 @@ export function RecentOrdersTable({
 }) {
   if (orders.length === 0) {
     return (
-      <p className="px-5 py-10 text-center text-sm text-muted-foreground">
-        No orders yet.
-      </p>
+      <div className="px-5 py-6">
+        <EmptyState
+          className="border-0 bg-transparent px-0 py-6"
+          title="No orders yet"
+          description="Orders appear here as soon as they are placed."
+        />
+      </div>
     )
   }
 

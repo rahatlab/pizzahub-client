@@ -55,7 +55,6 @@ export default async function VendorOverviewPage() {
           action={addItemAction}
         />
         <DashboardEmptyState
-          icon={TruckDeliveryIcon}
           title={failed ? "Dashboard data unavailable" : "No data yet"}
           description={
             failed

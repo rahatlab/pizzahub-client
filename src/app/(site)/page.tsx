@@ -14,6 +14,8 @@ import { Card } from "@/components/ui/card"
 import { CategoryTile } from "@/components/menu/category-tile"
 import { MenuItemCard } from "@/components/menu/menu-item-card"
 import { Hero } from "@/components/home/hero"
+import { EmptyState } from "@/components/shared/empty-state"
+import { Reveal } from "@/components/shared/reveal"
 import { CATEGORIES } from "@/lib/constants"
 import { fetchPublicApi } from "@/lib/api-url"
 import type { MenuItem } from "@/types"
@@ -117,29 +119,29 @@ export default async function Home() {
           </div>
 
           {featuredItems.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {featuredItems.map((item) => (
-                <MenuItemCard key={item.id} item={item} featured />
+            <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {featuredItems.map((item, index) => (
+                <Reveal
+                  key={item.id}
+                  delay={Math.min(index * 0.05, 0.25)}
+                >
+                  <MenuItemCard item={item} featured />
+                </Reveal>
               ))}
             </div>
           ) : (
-            <Card className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-              <p className="text-base font-medium">No featured items yet</p>
-              <p className="max-w-md text-sm text-muted-foreground">
-                Featured picks appear once kitchens are approved and publish
-                their menu items. Browse the full menu in the meantime.
-              </p>
-              <Link
-                href="/menu"
-                className={buttonVariants({
-                  variant: "outline",
-                  size: "sm",
-                  className: "mt-2",
-                })}
-              >
-                Browse Menu
-              </Link>
-            </Card>
+            <EmptyState
+              title="No featured items yet"
+              description="Featured picks appear once kitchens are approved and publish their menu items. Browse the full menu in the meantime."
+              action={
+                <Link
+                  href="/menu"
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  Browse Menu
+                </Link>
+              }
+            />
           )}
         </div>
       </section>
@@ -155,9 +157,11 @@ export default async function Home() {
               Pick a style and jump straight into the matching menu.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            {categories.map((category) => (
-              <CategoryTile key={category.value} category={category} />
+          <div className="grid grid-cols-2 items-stretch gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            {categories.map((category, index) => (
+              <Reveal key={category.value} delay={Math.min(index * 0.04, 0.2)}>
+                <CategoryTile category={category} />
+              </Reveal>
             ))}
           </div>
         </div>
@@ -175,17 +179,19 @@ export default async function Home() {
               pricing — no surprise fees at checkout.
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {BENEFITS.map((benefit) => (
-              <Card key={benefit.title} className="h-full gap-3 p-6">
-                <span className="grid size-10 place-items-center rounded-lg bg-brand/10 text-brand">
-                  <HugeiconsIcon icon={benefit.icon} className="size-5" />
-                </span>
-                <h3 className="text-base font-semibold">{benefit.title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {benefit.description}
-                </p>
-              </Card>
+          <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {BENEFITS.map((benefit, index) => (
+              <Reveal key={benefit.title} delay={Math.min(index * 0.06, 0.24)}>
+                <Card className="h-full gap-3 p-6">
+                  <span className="grid size-10 place-items-center rounded-lg bg-brand/10 text-brand">
+                    <HugeiconsIcon icon={benefit.icon} className="size-5" />
+                  </span>
+                  <h3 className="text-base font-semibold">{benefit.title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {benefit.description}
+                  </p>
+                </Card>
+              </Reveal>
             ))}
           </div>
         </div>

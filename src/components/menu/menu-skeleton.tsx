@@ -30,7 +30,7 @@ export function MenuPageSkeleton() {
             key={index}
             className="overflow-hidden rounded-xl border border-border bg-card"
           >
-            <Skeleton className="aspect-[4/3] w-full rounded-none" />
+            <Skeleton className="aspect-video w-full rounded-none" />
             <div className="space-y-2 p-4">
               <div className="flex items-center justify-between gap-2">
                 <Skeleton className="h-5 w-24 rounded-full" />

@@ -24,7 +24,7 @@ export function MenuItemCard({
 
   return (
     <Card className="group h-full gap-0 overflow-hidden p-0 transition-colors hover:border-border-strong">
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-surface">
+      <div className="relative aspect-video w-full overflow-hidden bg-surface">
         {image ? (
           <Image
             src={image}

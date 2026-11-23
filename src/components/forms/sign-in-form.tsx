@@ -13,7 +13,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 
 export function SignInForm({ redirectTo }: { redirectTo: string }) {
@@ -61,7 +60,9 @@ export function SignInForm({ redirectTo }: { redirectTo: string }) {
   return (
     <Card className="w-full max-w-md border-border bg-card/95 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
       <CardHeader className="gap-1.5">
-        <CardTitle className="text-2xl">Welcome back</CardTitle>
+        <h1 className="font-display text-2xl leading-none tracking-tight">
+          Welcome back
+        </h1>
         <CardDescription>
           Sign in to order, manage your kitchen, or review the platform.
         </CardDescription>

@@ -5,6 +5,7 @@ import { CancelCircleIcon } from "@hugeicons/core-free-icons"
 import { requireRole } from "@/lib/session"
 import { Logo } from "@/components/shared/logo"
 import { buttonVariants } from "@/components/ui/button"
+import { UpgradeButton } from "@/components/dashboard/upgrade-button"
 
 export const metadata: Metadata = { title: "Checkout cancelled" }
 
@@ -34,12 +35,22 @@ export default async function PaymentCancelPage() {
               checkout again whenever you are ready.
             </p>
           </div>
-          <Link
-            href="/dashboard/vendor/subscription"
-            className={buttonVariants({ size: "sm" })}
-          >
-            Back to Premium
-          </Link>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <UpgradeButton
+              className="w-full sm:w-auto"
+              label="Try checkout again"
+            />
+            <Link
+              href="/dashboard/vendor/subscription"
+              className={buttonVariants({
+                variant: "outline",
+                size: "lg",
+                className: "w-full sm:w-auto",
+              })}
+            >
+              Back to Premium
+            </Link>
+          </div>
         </div>
       </main>
     </div>
