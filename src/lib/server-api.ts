@@ -2,6 +2,7 @@ import "server-only"
 
 import { headers } from "next/headers"
 import { auth } from "./auth"
+import { ensureMongoReady } from "./mongo"
 import type { ApiResponse } from "@/types"
 
 const API_BASE =
@@ -16,6 +17,7 @@ export async function serverApiFetch<T>(
   path: string,
   init: RequestInit = {}
 ): Promise<ApiResponse<T>> {
+  await ensureMongoReady()
   const result = await auth.api.getToken({
     headers: await headers(),
   })

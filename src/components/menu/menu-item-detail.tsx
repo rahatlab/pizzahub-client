@@ -11,6 +11,7 @@ import {
   Pizza01Icon,
   Store01Icon,
 } from "@hugeicons/core-free-icons"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -36,12 +37,22 @@ function todayIso(): string {
   return new Date(now.getTime() - offset).toISOString().slice(0, 10)
 }
 
+/** First two words' initials for the vendor avatar fallback. */
+function nameInitials(label: string): string {
+  return label
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join("")
+}
+
 export function MenuItemDetail({
   item,
   viewer,
 }: {
   item: MenuItem
-  viewer: { id: string; role: Role }
+  viewer: { id: string; name: string; role: Role }
 }) {
   const images = item.images ?? []
   const [activeImage, setActiveImage] = useState(0)
@@ -141,10 +152,22 @@ export function MenuItemDetail({
           </p>
 
           <Card className="flex items-center gap-3 p-5">
-            <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-brand/10 text-brand">
-              <HugeiconsIcon icon={Store01Icon} className="size-5" />
-            </span>
-            <div className="min-w-0">
+            <Avatar size="lg">
+              {item.vendor?.image ? (
+                <AvatarImage
+                  src={item.vendor.image}
+                  alt={
+                    item.vendor.businessName || item.vendor.name || "Kitchen"
+                  }
+                />
+              ) : null}
+              <AvatarFallback>
+                {nameInitials(
+                  item.vendor?.businessName || item.vendor?.name || ""
+                ) || <HugeiconsIcon icon={Store01Icon} className="size-5" />}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">
                 {item.vendor?.businessName || item.vendor?.name || "Kitchen"}
               </p>
@@ -154,6 +177,7 @@ export function MenuItemDetail({
                 </p>
               ) : null}
             </div>
+            {item.vendor?.subscriptionPlan === "premium" && <PremiumBadge />}
           </Card>
 
           {orderBlockedReason ? (
@@ -166,25 +190,31 @@ export function MenuItemDetail({
               </p>
             </div>
           ) : (
-            <OrderDialog item={item} />
+            <OrderDialog item={item} viewer={viewer} />
           )}
-
-          <p className="text-center text-xs text-muted-foreground">
-            No online payment — orders are placed directly with the kitchen.
-          </p>
         </div>
       </div>
     </div>
   )
 }
 
-function OrderDialog({ item }: { item: MenuItem }) {
+function OrderDialog({
+  item,
+  viewer,
+}: {
+  item: MenuItem
+  viewer: { name: string }
+}) {
   const [open, setOpen] = useState(false)
   const [deliveryDate, setDeliveryDate] = useState(todayIso())
   const [deliveryAddress, setDeliveryAddress] = useState("")
   const [message, setMessage] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  const vendorLabel =
+    item.vendor?.businessName || item.vendor?.name || "PizzaHub"
+  const cardholder = viewer.name.trim() || "Guest"
 
   const canSubmit =
     !submitting &&
@@ -234,11 +264,52 @@ function OrderDialog({ item }: { item: MenuItem }) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>Place order</DialogTitle>
+          <DialogTitle>Checkout</DialogTitle>
           <DialogDescription>
             {item.itemName} · ${item.price.toFixed(2)}
           </DialogDescription>
         </DialogHeader>
+
+        <div className="space-y-3">
+          {/* Decorative card preview — brand detail only, no payment happens here. */}
+          <div
+            aria-hidden="true"
+            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#1e1e20] via-[#141416] to-[#0a0a0b] p-5 shadow-[0_12px_32px_-16px_rgba(0,0,0,0.9)]"
+          >
+            <div className="pointer-events-none absolute -right-10 -top-12 size-36 rounded-full bg-brand/30 blur-3xl" />
+            <div className="relative space-y-5">
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-brand">
+                  {vendorLabel}
+                </p>
+                <span className="mt-0.5 h-7 w-9 shrink-0 rounded-[5px] bg-gradient-to-br from-[#f6e7ad] to-[#b8860b]" />
+              </div>
+              <p className="text-[clamp(0.8rem,4vw,1.125rem)] tracking-[0.2em] text-white/90 sm:tracking-[0.25em]">
+                0000 0000 0000 0000
+              </p>
+              <div className="flex items-end justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/40">
+                    Card holder
+                  </p>
+                  <p className="truncate text-sm font-medium text-white/90">
+                    {cardholder}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/40">
+                    Valid thru
+                  </p>
+                  <p className="text-sm font-medium tabular-nums text-white/90">
+                    12/29
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-dashed border-border" />
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

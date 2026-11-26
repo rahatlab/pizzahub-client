@@ -5,6 +5,7 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { auth } from "./auth"
 import { getDb } from "./db"
+import { ensureMongoReady } from "./mongo"
 import type { CurrentUser, Role } from "@/types"
 
 type UserDocument = {
@@ -53,6 +54,8 @@ function mapUser(doc: UserDocument): CurrentUser {
 }
 
 export async function getSession() {
+  // Better Auth's adapter hits Mongo directly; heal a closed topology first.
+  await ensureMongoReady()
   return auth.api.getSession({
     headers: await headers(),
   })

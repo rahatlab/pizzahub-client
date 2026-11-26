@@ -34,6 +34,9 @@ export default async function MenuItemPage({
   }
 
   return (
-    <MenuItemDetail item={item} viewer={{ id: user.id, role: user.role }} />
+    <MenuItemDetail
+      item={item}
+      viewer={{ id: user.id, name: user.name, role: user.role }}
+    />
   )
 }

@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "i.ibb.co" },
       { protocol: "https", hostname: "ibb.co" },
       { protocol: "https", hostname: "images.unsplash.com" },
+      // Google account avatars served to next/image (profile + dashboard).
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
   },
   turbopack: {
